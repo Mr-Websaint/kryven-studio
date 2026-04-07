@@ -51,6 +51,16 @@ All settings can be configured directly in the application's sidebar:
 -   **Image URL (optional):** Provide a URL for image-to-image transformations.
 -   **URL of the image to animate (for videos):** The source for video creation.
 
+## Updating
+
+To update the application to the latest version, simply run the `update.py` script:
+
+```bash
+python update.py
+```
+
+This will automatically fetch the latest changes from GitHub, reset any local modifications, and update the required Python packages. Your generated images in the `output` folder will not be affected.
+
 ---
 
 ## Disclaimer
