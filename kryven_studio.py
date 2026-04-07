@@ -4,43 +4,115 @@ import json
 import re
 from datetime import datetime
 
-# --- Konfiguration & Initialisierung ---
+# --- Sprach- und Konfigurationseinstellungen ---
 
-st.set_page_config(page_title="Kryven AI Studio", page_icon="🎨", layout="wide")
-
-# API-Endpunkte (fest codiert gemäss Doku)
-IMAGE_API_URL = "https://kryven.cc/v1/images/generate"
-VIDEO_API_URL = "https://kryven.cc/v1/videos/generate"
+LANGUAGES = {
+    "de": {
+        "page_title": "Kryven AI Studio",
+        "settings_title": "⚙️ Einstellungen",
+        "api_key_label": "Kryven API-Key",
+        "api_key_help": "Dein API-Key von kryven.cc",
+        "language_label": "Sprache",
+        "mode_label": "Modus",
+        "mode_t2i": "Text zu Bild",
+        "mode_i2v": "Bild zu Video",
+        "main_title": "🎨 Kryven AI Studio",
+        "main_caption": "Erstelle hochwertige Bilder und Videos basierend auf der offiziellen Kryven API.",
+        "t2i_header": "Text zu Bild / Bild zu Bild",
+        "prompt_label": "Was möchtest du erstellen? (Prompt)",
+        "prompt_placeholder_t2i": "Ein Astronaut reitet auf einem Pferd im Weltall...",
+        "model_type_label": "Modell-Typ",
+        "model_type_help": "`a2e` ist Standard, `seedream` für Img2Img empfohlen.",
+        "aspect_ratio_label": "Seitenverhältnis",
+        "i2i_url_label": "Optionale Bild-URL (für Bild-zu-Bild)",
+        "i2i_url_placeholder": "https://example.com/my-image.jpg",
+        "generate_btn_image": "🚀 Bild generieren",
+        "i2v_header": "Bild zu Video",
+        "i2v_url_label": "URL des zu animierenden Bildes",
+        "i2v_url_placeholder": "https://example.com/static-image.jpg",
+        "i2v_prompt_label": "Optionale Anweisungen für die Animation",
+        "i2v_prompt_placeholder": "Das Wasser fällt aggressiv nach unten...",
+        "generate_btn_video": "🚀 Video generieren",
+        "error_api_key": "Bitte gib zuerst deinen API-Key in der Seitenleiste ein!",
+        "warning_prompt": "Bitte gib einen Prompt ein.",
+        "warning_init_image": "Bitte gib eine URL für das zu animierende Bild ein.",
+        "spinner_text": "Kryven KI arbeitet... Bitte warten.",
+        "success_generation": "Erfolgreich generiert!",
+        "generated_image_caption": "Generiertes Bild:",
+        "download_button": "Herunterladen",
+        "download_failed": "Download fehlgeschlagen:",
+        "error_no_url": "Konnte keine URL in der API-Antwort finden.",
+        "error_invalid_response": "Ungültige oder leere Antwort von der API erhalten.",
+        "info_credits": "Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens."
+    },
+    "en": {
+        "page_title": "Kryven AI Studio",
+        "settings_title": "⚙️ Settings",
+        "api_key_label": "Kryven API Key",
+        "api_key_help": "Your API key from kryven.cc",
+        "language_label": "Language",
+        "mode_label": "Mode",
+        "mode_t2i": "Text to Image",
+        "mode_i2v": "Image to Video",
+        "main_title": "🎨 Kryven AI Studio",
+        "main_caption": "Create high-quality images and videos based on the official Kryven API.",
+        "t2i_header": "Text to Image / Image to Image",
+        "prompt_label": "What do you want to create? (Prompt)",
+        "prompt_placeholder_t2i": "An astronaut riding a horse in space...",
+        "model_type_label": "Model Type",
+        "model_type_help": "`a2e` is standard, `seedream` is recommended for Img2Img.",
+        "aspect_ratio_label": "Aspect Ratio",
+        "i2i_url_label": "Optional Image URL (for Image-to-Image)",
+        "i2i_url_placeholder": "https://example.com/my-image.jpg",
+        "generate_btn_image": "🚀 Generate Image",
+        "i2v_header": "Image to Video",
+        "i2v_url_label": "URL of the image to animate",
+        "i2v_url_placeholder": "https://example.com/static-image.jpg",
+        "i2v_prompt_label": "Optional instructions for the animation",
+        "i2v_prompt_placeholder": "The water is crashing down aggressively...",
+        "generate_btn_video": "🚀 Generate Video",
+        "error_api_key": "Please enter your API key in the sidebar first!",
+        "warning_prompt": "Please enter a prompt.",
+        "warning_init_image": "Please enter a URL for the image to animate.",
+        "spinner_text": "Kryven AI is working... Please wait.",
+        "success_generation": "Successfully generated!",
+        "generated_image_caption": "Generated Image:",
+        "download_button": "Download",
+        "download_failed": "Download failed:",
+        "error_no_url": "Could not find a URL in the API response.",
+        "error_invalid_response": "Received an invalid or empty response from the API.",
+        "info_credits": "Note: Credits are deducted from kryven.cc for each successful generation. Video generation costs 30,000 tokens."
+    }
+}
 
 # Initialisiere den Session State
+if "lang" not in st.session_state:
+    st.session_state.lang = "de"
 if "generation_result" not in st.session_state:
     st.session_state.generation_result = None
 if "last_prompt" not in st.session_state:
     st.session_state.last_prompt = ""
 
-# --- Styling ---
+# Lade die aktuelle Sprache
+lang = LANGUAGES[st.session_state.lang]
 
+st.set_page_config(page_title=lang["page_title"], page_icon="🎨", layout="wide")
+
+# API-Endpunkte
+IMAGE_API_URL = "https://kryven.cc/v1/images/generate"
+VIDEO_API_URL = "https://kryven.cc/v1/videos/generate"
+
+# --- Styling ---
 st.markdown("""
     <style>
     .main { background-color: #0e1117; }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
-    }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #ff4b4b; color: white; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- API-Funktionen ---
-
 def call_kryven_api(api_key, endpoint, payload):
-    """Kapselt den API-Aufruf. Gibt die JSON-Antwort bei Erfolg oder None zurück."""
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
         response = requests.post(endpoint, data=json.dumps(payload), headers=headers)
         response.raise_for_status()
@@ -55,134 +127,118 @@ def call_kryven_api(api_key, endpoint, payload):
         return None
 
 def create_safe_filename(prompt_text):
-    """Erstellt einen sicheren und aussagekräftigen Dateinamen aus dem Prompt."""
-    if not prompt_text:
-        return "generated_media"
-    # Entferne nicht-alphanumerische Zeichen und ersetze Leerzeichen durch Unterstriche
+    if not prompt_text: return "generated_media"
     s = re.sub(r'[^a-z0-9\s]', '', prompt_text.lower())
     s = re.sub(r'\s+', '_', s).strip('_')
-    # Kürze auf eine vernünftige Länge
     return s[:50]
 
 # --- UI-Funktionen ---
-
 def display_result():
-    """Zeigt das im Session State gespeicherte Ergebnis an."""
     if st.session_state.generation_result:
         result_type = st.session_state.generation_result["type"]
         result_url = st.session_state.generation_result["url"]
         prompt_text = st.session_state.last_prompt
-
-        st.success("Erfolgreich generiert!")
+        st.success(lang["success_generation"])
         
         if result_type == "image":
-            st.image(result_url, caption=f"Generiertes Bild: {prompt_text}", use_container_width=True)
+            st.image(result_url, caption=f"{lang['generated_image_caption']} {prompt_text}", use_container_width=True)
             try:
                 res = requests.get(result_url)
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
-                st.download_button("Bild herunterladen", res.content, file_name, "image/png")
+                st.download_button(lang["download_button"], res.content, file_name, "image/png")
             except requests.exceptions.RequestException as e:
-                st.warning(f"Download fehlgeschlagen: {e}")
-
+                st.warning(f"{lang['download_failed']} {e}")
         elif result_type == "video":
             st.video(result_url)
             try:
                 res = requests.get(result_url)
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
-                st.download_button("Video herunterladen", res.content, file_name, "video/mp4")
+                st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
             except requests.exceptions.RequestException as e:
-                st.warning(f"Download fehlgeschlagen: {e}")
+                st.warning(f"{lang['download_failed']} {e}")
 
 # --- Sidebar ---
+st.sidebar.title(lang["settings_title"])
+api_key = st.sidebar.text_input(lang["api_key_label"], type="password", help=lang["api_key_help"])
 
-st.sidebar.title("⚙️ Einstellungen")
-api_key = st.sidebar.text_input("Kryven API-Key", type="password", help="Dein API-Key von kryven.cc")
+def change_language():
+    st.session_state.lang = "en" if st.session_state.lang == "de" else "de"
+
+lang_options = ["de", "en"]
+lang_display = ["Deutsch", "English"]
+selected_lang_index = lang_options.index(st.session_state.lang)
+st.sidebar.selectbox(lang["language_label"], lang_display, index=selected_lang_index, key="lang_selector", on_change=lambda: setattr(st.session_state, 'lang', lang_options[lang_display.index(st.session_state.lang_selector)]))
+
 st.sidebar.divider()
-mode = st.sidebar.radio("Modus", ["Text zu Bild", "Bild zu Video"])
+mode_options = [lang["mode_t2i"], lang["mode_i2v"]]
+mode = st.sidebar.radio(lang["mode_label"], mode_options)
 
 # --- Hauptbereich ---
-
-st.title("🎨 Kryven AI Studio")
-st.caption("Erstelle hochwertige Bilder und Videos basierend auf der offiziellen Kryven API.")
+st.title(lang["main_title"])
+st.caption(lang["main_caption"])
 
 payload = {}
 endpoint = ""
 generate_btn_label = ""
 
-if mode == "Text zu Bild":
-    st.header("Text zu Bild / Bild zu Bild")
-    prompt = st.text_area("Was möchtest du erstellen? (Prompt)", placeholder="Ein Astronaut reitet auf einem Pferd im Weltall...", height=150)
-    
+if mode == lang["mode_t2i"]:
+    st.header(lang["t2i_header"])
+    prompt = st.text_area(lang["prompt_label"], placeholder=lang["prompt_placeholder_t2i"], height=150)
     col1, col2 = st.columns(2)
     with col1:
-        model_type = st.selectbox("Modell-Typ", ["a2e", "seedream"], help="`a2e` ist Standard, `seedream` für Img2Img empfohlen.")
+        model_type = st.selectbox(lang["model_type_label"], ["a2e", "seedream"], help=lang["model_type_help"])
     with col2:
-        aspect_ratio = st.selectbox("Seitenverhältnis", ["16:9", "1:1", "9:16", "4:3", "3:2"])
-
-    input_image_url = st.text_input("Optionale Bild-URL (für Bild-zu-Bild)", placeholder="https://example.com/my-image.jpg")
-
+        aspect_ratio = st.selectbox(lang["aspect_ratio_label"], ["16:9", "1:1", "9:16", "4:3", "3:2"])
+    input_image_url = st.text_input(lang["i2i_url_label"], placeholder=lang["i2i_url_placeholder"])
     endpoint = IMAGE_API_URL
     payload = {"prompt": prompt, "model_type": model_type, "aspect_ratio": aspect_ratio}
-    if input_image_url:
-        payload["input_images"] = [input_image_url]
-    
-    generate_btn_label = "🚀 Bild generieren"
+    if input_image_url: payload["input_images"] = [input_image_url]
+    generate_btn_label = lang["generate_btn_image"]
 
-elif mode == "Bild zu Video":
-    st.header("Bild zu Video")
-    init_image_url = st.text_input("URL des zu animierenden Bildes", placeholder="https://example.com/static-image.jpg")
-    prompt = st.text_area("Optionale Anweisungen für die Animation", placeholder="Das Wasser fällt aggressiv nach unten...", height=100)
-
+elif mode == lang["mode_i2v"]:
+    st.header(lang["i2v_header"])
+    init_image_url = st.text_input(lang["i2v_url_label"], placeholder=lang["i2v_url_placeholder"])
+    prompt = st.text_area(lang["i2v_prompt_label"], placeholder=lang["i2v_prompt_placeholder"], height=100)
     endpoint = VIDEO_API_URL
     payload = {"init_image": init_image_url}
-    if prompt:
-        payload["prompt"] = prompt
-        
-    generate_btn_label = "🚀 Video generieren"
-
+    if prompt: payload["prompt"] = prompt
+    generate_btn_label = lang["generate_btn_video"]
 
 # --- Generierungs-Logik ---
-
 _, col_btn, _ = st.columns([1, 1, 1])
 with col_btn:
     if st.button(generate_btn_label):
         is_valid = True
         if not api_key:
-            st.error("Bitte gib zuerst deinen API-Key in der Seitenleiste ein!")
+            st.error(lang["error_api_key"])
             is_valid = False
-        
-        if mode == "Text zu Bild" and not payload.get("prompt"):
-            st.warning("Bitte gib einen Prompt ein.")
+        if mode == lang["mode_t2i"] and not payload.get("prompt"):
+            st.warning(lang["warning_prompt"])
             is_valid = False
-            
-        if mode == "Bild zu Video" and not payload.get("init_image"):
-            st.warning("Bitte gib eine URL für das zu animierende Bild ein.")
+        if mode == lang["mode_i2v"] and not payload.get("init_image"):
+            st.warning(lang["warning_init_image"])
             is_valid = False
-
         if is_valid:
-            with st.spinner(f"Kryven KI arbeitet... Bitte warten."):
+            with st.spinner(lang["spinner_text"]):
                 api_response = call_kryven_api(api_key, endpoint, payload)
-                
                 if api_response and "data" in api_response and api_response["data"]:
                     url = api_response["data"][0].get("url")
                     if url:
-                        result_type = "video" if mode == "Bild zu Video" else "image"
+                        result_type = "video" if mode == lang["mode_i2v"] else "image"
                         st.session_state.generation_result = {"type": result_type, "url": url}
                         st.session_state.last_prompt = payload.get("prompt", "")
                     else:
-                        st.error("Konnte keine URL in der API-Antwort finden.")
+                        st.error(lang["error_no_url"])
                         st.session_state.generation_result = None
                 else:
-                    st.error("Ungültige oder leere Antwort von der API erhalten.")
+                    st.error(lang["error_invalid_response"])
                     st.session_state.generation_result = None
-            
-            # Trigger a rerun to display the new result immediately
             st.rerun()
 
 # Zeige das Ergebnis aus dem Session State an
 display_result()
 
 st.divider()
-st.info("Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens.")
+st.info(lang["info_credits"])
