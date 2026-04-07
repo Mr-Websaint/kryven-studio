@@ -161,38 +161,37 @@ def create_safe_filename(prompt_text):
     return s[:50]
 
 # --- UI-Funktionen ---
-def display_error(container):
+def display_error():
     if st.session_state.error_message:
-        container.error(st.session_state.error_message)
+        st.error(st.session_state.error_message)
         st.session_state.error_message = None
 
-def display_result(container):
+def display_result():
     if st.session_state.generation_result:
         result_type = st.session_state.generation_result["type"]
         result_url = st.session_state.generation_result["url"]
         prompt_text = st.session_state.last_prompt
-        with container:
-            st.success(lang["success_generation"])
-            if result_type == "image":
-                st.image(result_url, caption=f"{lang['generated_image_caption']} {prompt_text}", use_container_width=True)
-                try:
-                    res = requests.get(result_url)
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
-                    st.download_button(lang["download_button"], res.content, file_name, "image/png")
-                    st.caption(lang["output_tip"])
-                except requests.exceptions.RequestException as e:
-                    st.warning(f"{lang['download_failed']} {e}")
-            elif result_type == "video":
-                st.video(result_url)
-                try:
-                    res = requests.get(result_url)
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
-                    st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
-                    st.caption(lang["output_tip"])
-                except requests.exceptions.RequestException as e:
-                    st.warning(f"{lang['download_failed']} {e}")
+        st.success(lang["success_generation"])
+        if result_type == "image":
+            st.image(result_url, caption=f"{lang['generated_image_caption']} {prompt_text}", use_container_width=True)
+            try:
+                res = requests.get(result_url)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
+                st.download_button(lang["download_button"], res.content, file_name, "image/png")
+                st.caption(lang["output_tip"])
+            except requests.exceptions.RequestException as e:
+                st.warning(f"{lang['download_failed']} {e}")
+        elif result_type == "video":
+            st.video(result_url)
+            try:
+                res = requests.get(result_url)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
+                st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
+                st.caption(lang["output_tip"])
+            except requests.exceptions.RequestException as e:
+                st.warning(f"{lang['download_failed']} {e}")
 
 # --- Sidebar ---
 st.sidebar.title(lang["settings_title"])
@@ -276,7 +275,6 @@ with col_btn:
             is_valid = False
         
         if is_valid:
-            # Clear previous result and error ONLY when starting a new, valid generation
             st.session_state.generation_result = None
             st.session_state.error_message = None
             with st.spinner(lang["spinner_text"]):
@@ -294,12 +292,11 @@ with col_btn:
                      st.session_state.error_message = lang["error_invalid_response"]
             st.rerun()
 
-# Dieser Container wird am Ende des Layouts platziert, um die Ergebnisse dort anzuzeigen
-result_container = st.empty()
-
-# Zeige Fehler und Ergebnisse im Container an
-display_error(result_container)
-display_result(result_container)
-
+# --- Anzeige-Logik ---
 st.divider()
+
+# Zeige Fehler und Ergebnisse aus dem Session State an
+display_error()
+display_result()
+
 st.info(lang["info_credits"])
