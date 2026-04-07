@@ -120,7 +120,6 @@ IMAGE_API_URL = "https://kryven.cc/v1/images/generate"
 VIDEO_API_URL = "https://kryven.cc/v1/videos/generate"
 
 def check_for_updates_on_startup():
-    """Checks for new updates on startup without fetching."""
     try:
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         subprocess.run(["git", "fetch"], check=True, capture_output=True)
@@ -162,38 +161,38 @@ def create_safe_filename(prompt_text):
     return s[:50]
 
 # --- UI-Funktionen ---
-def display_error():
+def display_error(container):
     if st.session_state.error_message:
-        st.error(st.session_state.error_message)
+        container.error(st.session_state.error_message)
         st.session_state.error_message = None
 
-def display_result():
+def display_result(container):
     if st.session_state.generation_result:
         result_type = st.session_state.generation_result["type"]
         result_url = st.session_state.generation_result["url"]
         prompt_text = st.session_state.last_prompt
-        st.success(lang["success_generation"])
-        
-        if result_type == "image":
-            st.image(result_url, caption=f"{lang['generated_image_caption']} {prompt_text}", use_container_width=True)
-            try:
-                res = requests.get(result_url)
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
-                st.download_button(lang["download_button"], res.content, file_name, "image/png")
-                st.caption(lang["output_tip"])
-            except requests.exceptions.RequestException as e:
-                st.warning(f"{lang['download_failed']} {e}")
-        elif result_type == "video":
-            st.video(result_url)
-            try:
-                res = requests.get(result_url)
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
-                st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
-                st.caption(lang["output_tip"])
-            except requests.exceptions.RequestException as e:
-                st.warning(f"{lang['download_failed']} {e}")
+        with container:
+            st.success(lang["success_generation"])
+            if result_type == "image":
+                st.image(result_url, caption=f"{lang['generated_image_caption']} {prompt_text}", use_container_width=True)
+                try:
+                    res = requests.get(result_url)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
+                    st.download_button(lang["download_button"], res.content, file_name, "image/png")
+                    st.caption(lang["output_tip"])
+                except requests.exceptions.RequestException as e:
+                    st.warning(f"{lang['download_failed']} {e}")
+            elif result_type == "video":
+                st.video(result_url)
+                try:
+                    res = requests.get(result_url)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
+                    st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
+                    st.caption(lang["output_tip"])
+                except requests.exceptions.RequestException as e:
+                    st.warning(f"{lang['download_failed']} {e}")
 
 # --- Sidebar ---
 st.sidebar.title(lang["settings_title"])
@@ -233,10 +232,6 @@ if st.session_state.get("update_available", False):
         if st.button(lang["update_button"]):
             st.info("Starting updater... Please check the console window.")
             subprocess.Popen([sys.executable, "update.py"])
-
-# Zeige Fehler und Ergebnisse aus dem Session State an
-display_error()
-display_result()
 
 payload = {}
 endpoint = ""
@@ -279,9 +274,12 @@ with col_btn:
         if mode == lang["mode_i2v"] and not payload.get("init_image"):
             st.warning(lang["warning_init_image"])
             is_valid = False
+        
         if is_valid:
+            # Clear previous result and error ONLY when starting a new, valid generation
+            st.session_state.generation_result = None
+            st.session_state.error_message = None
             with st.spinner(lang["spinner_text"]):
-                st.session_state.generation_result = None
                 api_response = call_kryven_api(api_key, endpoint, payload)
                 
                 if api_response and "data" in api_response and api_response["data"]:
@@ -295,6 +293,13 @@ with col_btn:
                 elif api_response is not None:
                      st.session_state.error_message = lang["error_invalid_response"]
             st.rerun()
+
+# Dieser Container wird am Ende des Layouts platziert, um die Ergebnisse dort anzuzeigen
+result_container = st.empty()
+
+# Zeige Fehler und Ergebnisse im Container an
+display_error(result_container)
+display_result(result_container)
 
 st.divider()
 st.info(lang["info_credits"])
