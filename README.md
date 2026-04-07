@@ -55,7 +55,7 @@ The application has a built-in update check. When you start `kryven_studio.py`, 
 
 If a new version is available, a notification will appear at the top of the page with an "Update Now" button. Clicking this button will launch the update process in a new console window. Follow the instructions in that window.
 
-Your generated images in the `output` folder will not be affected by the update.
+Your generated images in the `output` folder will not be affected by the update. For better organization, it is recommended to manually create an `output` folder in the project directory to save your generated files.
 
 ---
 

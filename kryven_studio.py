@@ -50,7 +50,8 @@ LANGUAGES = {
         "disclaimer": "Dies ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zum Kryven-Team.",
         "developed_by": "Entwickelt von Mr Websaint.",
         "update_available": "Eine neue Version ist verfügbar!",
-        "update_button": "Jetzt updaten"
+        "update_button": "Jetzt updaten",
+        "output_tip": "Tipp: Speichere deine Downloads im 'output'-Ordner."
     },
     "en": {
         "page_title": "Kryven AI Studio",
@@ -92,7 +93,8 @@ LANGUAGES = {
         "disclaimer": "This is an unofficial community project and is not affiliated with the Kryven team.",
         "developed_by": "Developed by Mr Websaint.",
         "update_available": "A new version is available!",
-        "update_button": "Update Now"
+        "update_button": "Update Now",
+        "output_tip": "Tip: Save your downloads in the 'output' folder."
     }
 }
 
@@ -176,6 +178,7 @@ def display_result():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.png"
                 st.download_button(lang["download_button"], res.content, file_name, "image/png")
+                st.caption(lang["output_tip"])
             except requests.exceptions.RequestException as e:
                 st.warning(f"{lang['download_failed']} {e}")
         elif result_type == "video":
@@ -185,6 +188,7 @@ def display_result():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 file_name = f"{timestamp}_{create_safe_filename(prompt_text)}.mp4"
                 st.download_button(lang["download_button"], res.content, file_name, "video/mp4")
+                st.caption(lang["output_tip"])
             except requests.exceptions.RequestException as e:
                 st.warning(f"{lang['download_failed']} {e}")
 
