@@ -51,7 +51,8 @@ LANGUAGES = {
         "developed_by": "Entwickelt von Mr Websaint.",
         "update_available": "Eine neue Version ist verfügbar!",
         "update_button": "Jetzt updaten",
-        "output_tip": "Tipp: Speichere deine Downloads im 'output'-Ordner."
+        "output_tip": "Tipp: Speichere deine Downloads im 'output'-Ordner.",
+        "api_error": "API Fehler"
     },
     "en": {
         "page_title": "Kryven AI Studio",
@@ -94,7 +95,8 @@ LANGUAGES = {
         "developed_by": "Developed by Mr Websaint.",
         "update_available": "A new version is available!",
         "update_button": "Update Now",
-        "output_tip": "Tip: Save your downloads in the 'output' folder."
+        "output_tip": "Tip: Save your downloads in the 'output' folder.",
+        "api_error": "API Error"
     }
 }
 
@@ -105,6 +107,8 @@ if "generation_result" not in st.session_state:
     st.session_state.generation_result = None
 if "last_prompt" not in st.session_state:
     st.session_state.last_prompt = ""
+if "error_message" not in st.session_state:
+    st.session_state.error_message = None
 
 # Lade die aktuelle Sprache
 lang = LANGUAGES[st.session_state.lang]
@@ -118,19 +122,12 @@ VIDEO_API_URL = "https://kryven.cc/v1/videos/generate"
 def check_for_updates_on_startup():
     """Checks for new updates on startup without fetching."""
     try:
-        # Ensure we are in the correct directory
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        
-        # Fetch latest data from remote
         subprocess.run(["git", "fetch"], check=True, capture_output=True)
-
         local_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
         remote_hash = subprocess.check_output(["git", "rev-parse", "@{u}"], text=True).strip()
-        
         return local_hash != remote_hash
     except (subprocess.CalledProcessError, FileNotFoundError):
-        # This can happen if not in a git repo or git is not installed.
-        # We just ignore it and don't show the update notification.
         return False
 
 # --- Styling ---
@@ -147,14 +144,15 @@ def call_kryven_api(api_key, endpoint, payload):
     try:
         response = requests.post(endpoint, data=json.dumps(payload), headers=headers)
         response.raise_for_status()
+        st.session_state.error_message = None
         return response.json()
     except requests.exceptions.RequestException as e:
-        st.error(f"Fehler bei der API-Anfrage: {e}")
-        if e.response is not None:
-            try:
-                st.error(f"API-Antwort (Status {e.response.status_code}): {e.response.json()}")
-            except json.JSONDecodeError:
-                st.error(f"API-Antwort (Status {e.response.status_code}): {e.response.text}")
+        error_detail = f"({e.response.status_code})" if e.response is not None else ""
+        try:
+            error_text = e.response.json().get("error", {}).get("message", e.response.text)
+        except (AttributeError, json.JSONDecodeError, ValueError):
+            error_text = e.response.text if e.response is not None else str(e)
+        st.session_state.error_message = f"{lang['api_error']} {error_detail}: {error_text}"
         return None
 
 def create_safe_filename(prompt_text):
@@ -164,6 +162,11 @@ def create_safe_filename(prompt_text):
     return s[:50]
 
 # --- UI-Funktionen ---
+def display_error():
+    if st.session_state.error_message:
+        st.error(st.session_state.error_message)
+        st.session_state.error_message = None
+
 def display_result():
     if st.session_state.generation_result:
         result_type = st.session_state.generation_result["type"]
@@ -198,18 +201,9 @@ api_key = st.sidebar.text_input(lang["api_key_label"], type="password", help=lan
 
 lang_options_map = {"Deutsch": "de", "English": "en"}
 lang_display_options = list(lang_options_map.keys())
-# Finde den Index der aktuell ausgewählten Sprache für die Anzeige
 current_lang_display = next(key for key, value in lang_options_map.items() if value == st.session_state.lang)
 selected_lang_index = lang_display_options.index(current_lang_display)
-
-# Erstelle die Selectbox
-selected_language_display = st.sidebar.selectbox(
-    lang["language_label"],
-    lang_display_options,
-    index=selected_lang_index
-)
-
-# Aktualisiere die Sprache im State, falls sie sich geändert hat
+selected_language_display = st.sidebar.selectbox(lang["language_label"], lang_display_options, index=selected_lang_index)
 new_lang_code = lang_options_map[selected_language_display]
 if st.session_state.lang != new_lang_code:
     st.session_state.lang = new_lang_code
@@ -238,10 +232,11 @@ if st.session_state.get("update_available", False):
     with cols[1]:
         if st.button(lang["update_button"]):
             st.info("Starting updater... Please check the console window.")
-            # Run update script in a new console window
             subprocess.Popen([sys.executable, "update.py"])
-            # We can't easily know when it's done, so we just let it run.
-            # A rerun might be needed manually after update.
+
+# Zeige Fehler und Ergebnisse aus dem Session State an
+display_error()
+display_result()
 
 payload = {}
 endpoint = ""
@@ -286,7 +281,9 @@ with col_btn:
             is_valid = False
         if is_valid:
             with st.spinner(lang["spinner_text"]):
+                st.session_state.generation_result = None
                 api_response = call_kryven_api(api_key, endpoint, payload)
+                
                 if api_response and "data" in api_response and api_response["data"]:
                     url = api_response["data"][0].get("url")
                     if url:
@@ -294,15 +291,10 @@ with col_btn:
                         st.session_state.generation_result = {"type": result_type, "url": url}
                         st.session_state.last_prompt = payload.get("prompt", "")
                     else:
-                        st.error(lang["error_no_url"])
-                        st.session_state.generation_result = None
-                else:
-                    st.error(lang["error_invalid_response"])
-                    st.session_state.generation_result = None
+                        st.session_state.error_message = lang["error_no_url"]
+                elif api_response is not None:
+                     st.session_state.error_message = lang["error_invalid_response"]
             st.rerun()
-
-# Zeige das Ergebnis aus dem Session State an
-display_result()
 
 st.divider()
 st.info(lang["info_credits"])
