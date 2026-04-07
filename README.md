@@ -50,3 +50,13 @@ All settings can be configured directly in the application's sidebar:
 -   **Aspect Ratio (for images):** Define the format of the generated image.
 -   **Image URL (optional):** Provide a URL for image-to-image transformations.
 -   **URL of the image to animate (for videos):** The source for video creation.
+
+---
+
+## Disclaimer
+
+This is an unofficial, community-driven project. It is not affiliated with, endorsed by, or connected to the official Kryven team in any way. This tool was developed as a hobby project to provide a convenient user interface for the Kryven API.
+
+## License
+
+This project is open-source and available under the [MIT License](https://opensource.org/licenses/MIT).
