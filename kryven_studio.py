@@ -87,7 +87,7 @@ LANGUAGES = {
 
 # Initialisiere den Session State
 if "lang" not in st.session_state:
-    st.session_state.lang = "de"
+    st.session_state.lang = "en"
 if "generation_result" not in st.session_state:
     st.session_state.generation_result = None
 if "last_prompt" not in st.session_state:
@@ -163,13 +163,24 @@ def display_result():
 st.sidebar.title(lang["settings_title"])
 api_key = st.sidebar.text_input(lang["api_key_label"], type="password", help=lang["api_key_help"])
 
-def change_language():
-    st.session_state.lang = "en" if st.session_state.lang == "de" else "de"
+lang_options_map = {"Deutsch": "de", "English": "en"}
+lang_display_options = list(lang_options_map.keys())
+# Finde den Index der aktuell ausgewählten Sprache für die Anzeige
+current_lang_display = next(key for key, value in lang_options_map.items() if value == st.session_state.lang)
+selected_lang_index = lang_display_options.index(current_lang_display)
 
-lang_options = ["de", "en"]
-lang_display = ["Deutsch", "English"]
-selected_lang_index = lang_options.index(st.session_state.lang)
-st.sidebar.selectbox(lang["language_label"], lang_display, index=selected_lang_index, key="lang_selector", on_change=lambda: setattr(st.session_state, 'lang', lang_options[lang_display.index(st.session_state.lang_selector)]))
+# Erstelle die Selectbox
+selected_language_display = st.sidebar.selectbox(
+    lang["language_label"],
+    lang_display_options,
+    index=selected_lang_index
+)
+
+# Aktualisiere die Sprache im State, falls sie sich geändert hat
+new_lang_code = lang_options_map[selected_language_display]
+if st.session_state.lang != new_lang_code:
+    st.session_state.lang = new_lang_code
+    st.rerun()
 
 st.sidebar.divider()
 mode_options = [lang["mode_t2i"], lang["mode_i2v"]]
