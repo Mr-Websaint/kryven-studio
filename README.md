@@ -30,9 +30,9 @@ A simple yet powerful web frontend for the Kryven AI Media Generation API, built
     You will need an API key from [kryven.cc](https://kryven.cc).
 
 2.  **Run the Streamlit application:**
-    Execute the following command in your terminal:
+    Execute the following command in your terminal. Using `python -m streamlit` is recommended as it's more reliable than a direct command.
     ```bash
-    streamlit run kryven_studio.py
+    python -m streamlit run kryven_studio.py
     ```
 
 3.  **Use the application:**
