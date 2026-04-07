@@ -61,7 +61,7 @@ Your generated images in the `output` folder will not be affected by the update.
 
 ## Disclaimer
 
-This is an unofficial, community-driven project. It is not affiliated with, endorsed by, or connected to the official Kryven team in any way. This tool was developed as a hobby project to provide a convenient user interface for the Kryven API.
+This is an unofficial, community-driven project. It is not affiliated with, endorsed by, or connected to the official Kryven team in any way. This tool was developed by Mr Websaint as a hobby project to provide a convenient user interface for the Kryven API.
 
 ## License
 

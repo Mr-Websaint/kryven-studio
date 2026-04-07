@@ -48,6 +48,7 @@ LANGUAGES = {
         "error_invalid_response": "Ungültige oder leere Antwort von der API erhalten.",
         "info_credits": "Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens.",
         "disclaimer": "Dies ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zum Kryven-Team.",
+        "developed_by": "Entwickelt von Mr Websaint.",
         "update_available": "Eine neue Version ist verfügbar!",
         "update_button": "Jetzt updaten"
     },
@@ -89,6 +90,7 @@ LANGUAGES = {
         "error_invalid_response": "Received an invalid or empty response from the API.",
         "info_credits": "Note: Credits are deducted from kryven.cc for each successful generation. Video generation costs 30,000 tokens.",
         "disclaimer": "This is an unofficial community project and is not affiliated with the Kryven team.",
+        "developed_by": "Developed by Mr Websaint.",
         "update_available": "A new version is available!",
         "update_button": "Update Now"
     }
@@ -214,7 +216,7 @@ mode_options = [lang["mode_t2i"], lang["mode_i2v"]]
 mode = st.sidebar.radio(lang["mode_label"], mode_options)
 
 st.sidebar.divider()
-st.sidebar.markdown(f"<small>{lang['disclaimer']}</small>", unsafe_allow_html=True)
+st.sidebar.markdown(f"<small>{lang['disclaimer']}<br>{lang['developed_by']}</small>", unsafe_allow_html=True)
 
 # --- Hauptbereich ---
 st.title(lang["main_title"])
