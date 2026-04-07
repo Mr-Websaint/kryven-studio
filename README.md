@@ -1,5 +1,3 @@
-# Kryven AI Studio 🎨
-
 A simple yet powerful web frontend for the Kryven AI Media Generation API, built with Streamlit. This application provides an intuitive graphical user interface to generate images and videos.
 
 ## Features
@@ -53,13 +51,11 @@ All settings can be configured directly in the application's sidebar:
 
 ## Updating
 
-To update the application to the latest version, simply run the `update.py` script:
+The application has a built-in update check. When you start `kryven_studio.py`, it will automatically check for a new version.
 
-```bash
-python update.py
-```
+If a new version is available, a notification will appear at the top of the page with an "Update Now" button. Clicking this button will launch the update process in a new console window. Follow the instructions in that window.
 
-This will automatically fetch the latest changes from GitHub, reset any local modifications, and update the required Python packages. Your generated images in the `output` folder will not be affected.
+Your generated images in the `output` folder will not be affected by the update.
 
 ---
 

@@ -3,6 +3,9 @@ import requests
 import json
 import re
 from datetime import datetime
+import subprocess
+import sys
+import os
 
 # --- Sprach- und Konfigurationseinstellungen ---
 
@@ -44,7 +47,9 @@ LANGUAGES = {
         "error_no_url": "Konnte keine URL in der API-Antwort finden.",
         "error_invalid_response": "Ungültige oder leere Antwort von der API erhalten.",
         "info_credits": "Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens.",
-        "disclaimer": "Dies ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zum Kryven-Team."
+        "disclaimer": "Dies ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zum Kryven-Team.",
+        "update_available": "Eine neue Version ist verfügbar!",
+        "update_button": "Jetzt updaten"
     },
     "en": {
         "page_title": "Kryven AI Studio",
@@ -83,7 +88,9 @@ LANGUAGES = {
         "error_no_url": "Could not find a URL in the API response.",
         "error_invalid_response": "Received an invalid or empty response from the API.",
         "info_credits": "Note: Credits are deducted from kryven.cc for each successful generation. Video generation costs 30,000 tokens.",
-        "disclaimer": "This is an unofficial community project and is not affiliated with the Kryven team."
+        "disclaimer": "This is an unofficial community project and is not affiliated with the Kryven team.",
+        "update_available": "A new version is available!",
+        "update_button": "Update Now"
     }
 }
 
@@ -103,6 +110,24 @@ st.set_page_config(page_title=lang["page_title"], page_icon="🎨", layout="wide
 # API-Endpunkte
 IMAGE_API_URL = "https://kryven.cc/v1/images/generate"
 VIDEO_API_URL = "https://kryven.cc/v1/videos/generate"
+
+def check_for_updates_on_startup():
+    """Checks for new updates on startup without fetching."""
+    try:
+        # Ensure we are in the correct directory
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Fetch latest data from remote
+        subprocess.run(["git", "fetch"], check=True, capture_output=True)
+
+        local_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        remote_hash = subprocess.check_output(["git", "rev-parse", "@{u}"], text=True).strip()
+        
+        return local_hash != remote_hash
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # This can happen if not in a git repo or git is not installed.
+        # We just ignore it and don't show the update notification.
+        return False
 
 # --- Styling ---
 st.markdown("""
@@ -194,6 +219,23 @@ st.sidebar.markdown(f"<small>{lang['disclaimer']}</small>", unsafe_allow_html=Tr
 # --- Hauptbereich ---
 st.title(lang["main_title"])
 st.caption(lang["main_caption"])
+
+# Update Check Notification
+if "update_checked" not in st.session_state:
+    st.session_state.update_available = check_for_updates_on_startup()
+    st.session_state.update_checked = True
+
+if st.session_state.get("update_available", False):
+    cols = st.columns([5, 1])
+    with cols[0]:
+        st.info(lang["update_available"])
+    with cols[1]:
+        if st.button(lang["update_button"]):
+            st.info("Starting updater... Please check the console window.")
+            # Run update script in a new console window
+            subprocess.Popen([sys.executable, "update.py"])
+            # We can't easily know when it's done, so we just let it run.
+            # A rerun might be needed manually after update.
 
 payload = {}
 endpoint = ""
