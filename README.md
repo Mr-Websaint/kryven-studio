@@ -33,6 +33,13 @@ A simple yet powerful web frontend for the Kryven AI Media Generation API, built
     python -m streamlit run kryven_studio.py
     ```
 
+    **Debug Mode**
+
+    To get more detailed output for troubleshooting, you can run the application in debug mode by adding the `-- --debug` flag:
+    ```bash
+    python -m streamlit run kryven_studio.py -- --debug
+    ```
+
 3.  **Use the application:**
     -   Open the URL displayed in your terminal in your browser.
     -   Enter your Kryven API key in the sidebar.

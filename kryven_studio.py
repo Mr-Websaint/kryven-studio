@@ -6,6 +6,10 @@ from datetime import datetime
 import subprocess
 import sys
 import os
+import copy
+
+# --- Argument Parsing for Debug Mode ---
+DEBUG_MODE = "--debug" in sys.argv
 
 # --- Sprach- und Konfigurationseinstellungen ---
 
@@ -109,6 +113,8 @@ if "last_prompt" not in st.session_state:
     st.session_state.last_prompt = ""
 if "error_message" not in st.session_state:
     st.session_state.error_message = None
+if "debug_mode" not in st.session_state:
+    st.session_state.debug_mode = DEBUG_MODE
 
 # Lade die aktuelle Sprache
 lang = LANGUAGES[st.session_state.lang]
@@ -139,11 +145,18 @@ st.markdown("""
 
 # --- API-Funktionen ---
 def call_kryven_api(api_key, endpoint, payload):
+    if st.session_state.debug_mode:
+        st.write("--- DEBUG: API Payload ---")
+        st.json(payload)
+
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
         response = requests.post(endpoint, data=json.dumps(payload), headers=headers)
         response.raise_for_status()
         st.session_state.error_message = None
+        if st.session_state.debug_mode:
+            st.write("--- DEBUG: API Response ---")
+            st.json(response.json())
         return response.json()
     except requests.exceptions.RequestException as e:
         error_detail = f"({e.response.status_code})" if e.response is not None else ""
@@ -215,6 +228,14 @@ st.sidebar.divider()
 st.sidebar.markdown(f"<small>{lang['disclaimer']}<br>{lang['developed_by']}</small>", unsafe_allow_html=True)
 
 # --- Hauptbereich ---
+if st.session_state.debug_mode:
+    st.write("--- DEBUG: Session State ---")
+    debug_state = copy.deepcopy(st.session_state.to_dict())
+    # Redact sensitive info for display
+    if 'api_key' in debug_state:
+        debug_state['api_key'] = "[REDACTED]"
+    st.json(debug_state)
+
 st.title(lang["main_title"])
 st.caption(lang["main_caption"])
 
@@ -290,12 +311,11 @@ with col_btn:
                         st.session_state.error_message = lang["error_no_url"]
                 elif api_response is not None:
                      st.session_state.error_message = lang["error_invalid_response"]
-            st.rerun()
+            # No explicit rerun needed here, Streamlit's natural rerun after button click is enough
 
 # --- Anzeige-Logik ---
 st.divider()
 
-# Zeige Fehler und Ergebnisse aus dem Session State an
 display_error()
 display_result()
 
