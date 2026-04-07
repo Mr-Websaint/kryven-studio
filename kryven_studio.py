@@ -43,7 +43,8 @@ LANGUAGES = {
         "download_failed": "Download fehlgeschlagen:",
         "error_no_url": "Konnte keine URL in der API-Antwort finden.",
         "error_invalid_response": "Ungültige oder leere Antwort von der API erhalten.",
-        "info_credits": "Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens."
+        "info_credits": "Hinweis: Credits werden bei jeder erfolgreichen Generierung auf kryven.cc abgebucht. Video-Generierung kostet 30.000 Tokens.",
+        "disclaimer": "Dies ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zum Kryven-Team."
     },
     "en": {
         "page_title": "Kryven AI Studio",
@@ -81,7 +82,8 @@ LANGUAGES = {
         "download_failed": "Download failed:",
         "error_no_url": "Could not find a URL in the API response.",
         "error_invalid_response": "Received an invalid or empty response from the API.",
-        "info_credits": "Note: Credits are deducted from kryven.cc for each successful generation. Video generation costs 30,000 tokens."
+        "info_credits": "Note: Credits are deducted from kryven.cc for each successful generation. Video generation costs 30,000 tokens.",
+        "disclaimer": "This is an unofficial community project and is not affiliated with the Kryven team."
     }
 }
 
@@ -185,6 +187,9 @@ if st.session_state.lang != new_lang_code:
 st.sidebar.divider()
 mode_options = [lang["mode_t2i"], lang["mode_i2v"]]
 mode = st.sidebar.radio(lang["mode_label"], mode_options)
+
+st.sidebar.divider()
+st.sidebar.markdown(f"<small>{lang['disclaimer']}</small>", unsafe_allow_html=True)
 
 # --- Hauptbereich ---
 st.title(lang["main_title"])
