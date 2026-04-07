@@ -38,6 +38,13 @@ A simple yet powerful web frontend for the Kryven AI Media Generation API, built
     -   Enter your Kryven API key in the sidebar.
     -   Select the desired mode, fill in the fields, and start generating!
 
+### API Key Security
+
+Your API key is handled with care:
+-   **Temporary Storage:** The key is only stored in memory for the duration of your browser session.
+-   **No Persistent Storing:** It is **never** saved to disk or any permanent storage. You will need to re-enter the key if you close the application tab.
+-   **Secure Transmission:** The key is only sent directly to the official Kryven API endpoint and is not shared with any other third-party service.
+
 ## Configuration
 
 All settings can be configured directly in the application's sidebar:
