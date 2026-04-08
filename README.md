@@ -33,6 +33,11 @@ A simple yet powerful web frontend for the Kryven AI Media Generation API, built
     python -m streamlit run kryven_studio.py
     ```
 
+<br>
+<img width="378" height="91" alt="Wv242Mr84c" src="https://github.com/user-attachments/assets/31579da4-2d30-4946-b8b3-0bfd42471f89" />
+<br>
+
+
     **Debug Mode**
 
     To get more detailed output for troubleshooting, you can run the application in debug mode by adding the `-- --debug` flag:
@@ -44,6 +49,12 @@ A simple yet powerful web frontend for the Kryven AI Media Generation API, built
     -   Open the URL displayed in your terminal in your browser.
     -   Enter your Kryven API key in the sidebar.
     -   Select the desired mode, fill in the fields, and start generating!
+
+
+
+https://github.com/user-attachments/assets/f304d86e-f7aa-4c91-b7e7-a2454e4b10b7
+
+
 
 ### API Key Security
 
